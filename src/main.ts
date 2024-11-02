@@ -50,6 +50,7 @@ let velocityUniforms: any;
 
 let birdPositionShader: string;
 let birdVelocityShader: string;
+let vertexShader: string;
 
 function nextPowerOf2(n: number): number {
   return Math.pow(2, Math.ceil(Math.log(n) / Math.log(2)));
@@ -187,6 +188,9 @@ new GLTFLoader().load("boid.glb", function (gltf) {
     fetch("bird-velocity-shader.glsl")
       .then((r) => r.text())
       .then((s) => (birdVelocityShader = s)),
+    fetch("vertex-shader.glsl")
+      .then((r) => r.text())
+      .then((s) => (vertexShader = s)),
   ]).then(init);
 });
 
@@ -403,56 +407,7 @@ function initBirds(effectController: EffectController) {
     shader.uniforms.size = { value: effectController.size };
     shader.uniforms.delta = { value: 0.0 };
 
-    let token = "#define STANDARD";
-
-    let insert = /* glsl */ `
-                    attribute vec4 reference;
-                    attribute vec4 seeds;
-                    attribute vec3 birdColor;
-                    uniform sampler2D texturePosition;
-                    uniform sampler2D textureVelocity;
-                    uniform sampler2D textureAnimation;
-                    uniform float size;
-                    uniform float time;
-                `;
-
-    shader.vertexShader = shader.vertexShader.replace(token, token + insert);
-
-    token = "#include <begin_vertex>";
-
-    insert = /* glsl */ `
-                    vec4 tmpPos = texture2D( texturePosition, reference.xy );
-
-                    vec3 pos = tmpPos.xyz;
-                    vec3 velocity = normalize(texture2D( textureVelocity, reference.xy ).xyz);
-                    vec3 aniPos = texture2D( textureAnimation, vec2( reference.z, mod( time + ( seeds.x ) * ( ( 0.0004 + seeds.y / 10000.0) + normalize( velocity ) / 20000.0 ), reference.w ) ) ).xyz;
-                    vec3 newPosition = position;
-
-                    newPosition = mat3( modelMatrix ) * ( newPosition + aniPos );
-                    newPosition *= size + seeds.y * size * 0.2;
-
-                    velocity.z *= -1.;
-                    float xz = length( velocity.xz );
-                    float xyz = 1.;
-                    float x = sqrt( 1. - velocity.y * velocity.y );
-
-                    float cosry = velocity.x / xz;
-                    float sinry = velocity.z / xz;
-
-                    float cosrz = x / xyz;
-                    float sinrz = velocity.y / xyz;
-
-                    mat3 maty =  mat3( cosry, 0, -sinry, 0    , 1, 0     , sinry, 0, cosry );
-                    mat3 matz =  mat3( cosrz , sinrz, 0, -sinrz, cosrz, 0, 0     , 0    , 1 );
-
-                    newPosition =  maty * matz * newPosition;
-                    newPosition += pos;
-
-                    vec3 transformed = vec3( newPosition );
-                `;
-
-    shader.vertexShader = shader.vertexShader.replace(token, insert);
-
+    shader.vertexShader = vertexShader;
     materialShader = shader;
   };
 
