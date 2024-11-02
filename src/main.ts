@@ -31,11 +31,6 @@ let stats: Stats;
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let renderer: THREE.WebGLRenderer;
-let mouseX = 0;
-let mouseY = 0;
-
-let windowHalfX = window.innerWidth / 2;
-let windowHalfY = window.innerHeight / 2;
 
 const BOUNDS = 800;
 const BOUNDS_HALF = BOUNDS / 2;
@@ -233,9 +228,6 @@ function init() {
   stats = new Stats();
   container.appendChild(stats.dom);
 
-  container.style.touchAction = "none";
-  container.addEventListener("pointermove", onPointerMove);
-
   window.addEventListener("resize", onWindowResize);
 
   const gui = new GUI();
@@ -296,15 +288,6 @@ function render() {
   if (materialShader) materialShader.uniforms["time"].value = now / 1000;
   if (materialShader) materialShader.uniforms["delta"].value = delta;
 
-  velocityUniforms["predator"].value.set(
-    (0.5 * mouseX) / windowHalfX,
-    (-0.5 * mouseY) / windowHalfY,
-    0
-  );
-
-  mouseX = 10000;
-  mouseY = 10000;
-
   gpuCompute.compute();
 
   if (materialShader)
@@ -317,17 +300,7 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function onPointerMove(event: PointerEvent) {
-  if (event.isPrimary === false) return;
-
-  mouseX = event.clientX - windowHalfX;
-  mouseY = event.clientY - windowHalfY;
-}
-
 function onWindowResize() {
-  windowHalfX = window.innerWidth / 2;
-  windowHalfY = window.innerHeight / 2;
-
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
@@ -374,7 +347,6 @@ function initComputeRenderer() {
   velocityUniforms["alignmentDistance"] = { value: 1.0 };
   velocityUniforms["cohesionDistance"] = { value: 1.0 };
   velocityUniforms["freedomFactor"] = { value: 1.0 };
-  velocityUniforms["predator"] = { value: new THREE.Vector3() };
   velocityVariable.material.defines.BOUNDS = BOUNDS.toFixed(2);
 
   velocityVariable.wrapS = THREE.RepeatWrapping;
