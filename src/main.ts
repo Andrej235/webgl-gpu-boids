@@ -9,7 +9,6 @@ type EffectController = {
   separation: number;
   alignment: number;
   cohesion: number;
-  freedom: number;
   size: number;
   count: number;
 };
@@ -56,9 +55,9 @@ function lerp(value1: number, value2: number, amount: number): number {
   return value1 + (value2 - value1) * amount;
 }
 
-new GLTFLoader().load("boid.glb", function (gltf) {
+new GLTFLoader().load("boid_basic.glb", function (gltf) {
   const animations = gltf.animations;
-  durationAnimation = Math.round(animations[0].duration * 60);
+  durationAnimation = Math.round((animations[0]?.duration ?? 0) * 60);
   if (!("geometry" in gltf.scene.children[0])) return;
 
   const birdGeo = gltf.scene.children[0].geometry as THREE.BufferGeometry;
@@ -131,7 +130,7 @@ new GLTFLoader().load("boid.glb", function (gltf) {
   for (let i = 0; i < totalVertices; i++) {
     const bIndex = i % (birdGeo.getAttribute("position").count * 3);
     vertices.push(birdGeo.getAttribute("position").array[bIndex]);
-    color.push(birdGeo.getAttribute("color").array[bIndex]);
+    color.push(birdGeo.getAttribute("color")?.array[bIndex] ?? 0);
   }
 
   let r = Math.random();
@@ -236,7 +235,6 @@ function init() {
     separation: 20.0,
     alignment: 20.0,
     cohesion: 20.0,
-    freedom: 0.75,
     size: 0.2,
     count: Math.floor(BIRDS / 4),
   };
@@ -245,7 +243,6 @@ function init() {
     velocityUniforms["separationDistance"].value = effectController.separation;
     velocityUniforms["alignmentDistance"].value = effectController.alignment;
     velocityUniforms["cohesionDistance"].value = effectController.cohesion;
-    velocityUniforms["freedomFactor"].value = effectController.freedom;
     if (materialShader)
       materialShader.uniforms["size"].value = effectController.size;
     BirdGeometry.setDrawRange(0, indicesPerBird * effectController.count);
@@ -346,7 +343,6 @@ function initComputeRenderer() {
   velocityUniforms["separationDistance"] = { value: 1.0 };
   velocityUniforms["alignmentDistance"] = { value: 1.0 };
   velocityUniforms["cohesionDistance"] = { value: 1.0 };
-  velocityUniforms["freedomFactor"] = { value: 1.0 };
   velocityVariable.material.defines.BOUNDS = BOUNDS.toFixed(2);
 
   velocityVariable.wrapS = THREE.RepeatWrapping;

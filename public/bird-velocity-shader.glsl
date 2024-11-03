@@ -59,12 +59,12 @@ void main() {
 
             percent = distSquared / zoneRadiusSquared;
 
-            if(percent < separationThresh) { // low
+            if(percent < separationThresh) { 
       			// Separation - Move apart for comfort
                 f = (separationThresh / percent - 1.0) * delta;
                 velocity -= normalize(dir) * f;
 
-            } else if(percent < alignmentThresh) { // high
+            } else if(percent < alignmentThresh) {
     			// Alignment - fly the same direction
                 float threshDelta = alignmentThresh - separationThresh;
                 float adjustedPercent = (percent - separationThresh) / threshDelta;
